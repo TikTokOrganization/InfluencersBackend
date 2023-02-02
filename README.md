@@ -1,4 +1,4 @@
-# InfluencersFrontEnd  
+# InfluencersBackEnd  
 
 ## For Developers  
 ### Setting up dev environment
