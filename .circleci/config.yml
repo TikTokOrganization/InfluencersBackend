@@ -17,9 +17,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Initalize Virtual Environment
-          command: venv\Scripts\activate
-      - run:
           name: Install Python Dependencies
           command: pip install -r requirements.txt
       - run:
