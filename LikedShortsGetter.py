@@ -1,34 +1,90 @@
-import requests
-import json
+import requests, logging
+from json import load, dump
+from os import path, mkdir, listdir
+from sys import exit
 
-scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
+
+SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
 
 
-def main():
-    # Use refresh token (unchanging) to get a new access token (need new one every time) also using client id and client secret
-    data = {
-        "client_id": "620677125812-ccds23d5gqu0fu41uqvmur2s9crjts31.apps.googleusercontent.com",
-        "client_secret": "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",
-        "refresh_token": "1//01Lxp9upwVcXrCgYIARAAGAESNwF-L9IrKfX_2jk4ddpBWVP6mDLKgzZYiOvkinHlljgPpMdpDjXn8AiT1aMfbv44QQhuDgWosjk",
-        "grant_type": "refresh_token",
-    }
-    newToken = requests.post("https://accounts.google.com/o/oauth2/token", data=data)
-    newToken = json.loads(newToken.text)
-    newToken = newToken.get("access_token")
+#Ensure config file exists
+def get_config_filepath():
+    if not path.isdir("config"):
+        logging.error("Config folder does not exist. Please pull the latest stable branch.")
+        exit(0)
+    config_filepath = path.join("config", "auth.json")
+    if not path.isfile(config_filepath):
+        logging.error(f"Auth file at {config_filepath} does not exist. Please pull the latest stable branch.")
+        exit(0)
+    
+    return config_filepath
 
-    # make the request to the api using api key and token
-    params = {
+
+def load_auth_info(auth_filepath):
+    with open(auth_filepath) as auth_file:
+        auth_info = load(auth_file)
+    
+    return auth_info
+
+
+def get_liked_videos(auth_info):
+    token_url = "https://accounts.google.com/o/oauth2/token"
+    api_url = "https://youtube.googleapis.com/youtube/v3/videos"
+    search_params = {
         "myRating": "like",
         "key": "AIzaSyBEDqAaPKfAOqKvw8EjTLlI7A4JE1cmR9M",
         "part": "snippet,contentDetails,statistics",
     }
-    myHeaders = {"Authorization": "Bearer " + newToken, "Accept": "application/json"}
-    APIurl = "https://youtube.googleapis.com/youtube/v3/videos"
 
-    request = requests.get(APIurl, headers=myHeaders, params=params)
+    #Use refresh token (unchanging) to get a new access token (need new one every time) also using client id and client secret
+    token_response = requests.post(token_url, data = auth_info))
+    if token_response.status_code != 200:
+        logging.error(f"Token request failed, server returned {token_response.status_code}")
+        exit(0)
+    token = token_response["access_token"]
 
-    print(request.text)
+    #Make the request to the api using api key and token
+    search_headers = {"Authorization": "Bearer " + token, "Accept": "application/json"}
+    search_response = requests.get(api_url, headers = search_headers, params = search_params)
+    if search_response.status_code != 200:
+        logging.error(f"Search request failed, server returned {search_response.status_code}")
+        exit(0)
 
+    return dict(search_response.json)
+
+
+#Set up logger
+def logfile_setup():
+    if not path.isdir("logs"):
+        mkdir("logs")
+    filename = f"log-{len(listdir('logs'))}"
+    
+    return path.join("logs", filename)
+
+
+def main():
+    logging.info("Loading authorization credentials...")
+    auth_filepath = get_config_filepath()
+    auth_info = load_auth_info(auth_filepath)
+    logging.info("Authorization info loaded.")
+
+    logging.info("Attempting request...")
+    user_data = get_liked_videos(auth_info)
+    logging.info("Request completed.")
+
+    logging.info("Writing data to file...")
+    with open("search_data.json") as output_file:
+        dump(user_data, output_file, indent = 4)
+    logging.info("Data written.")
+    
+    logging.info("Exiting...")
+    exit(0)
+ 
 
 if __name__ == "__main__":
+    logger_format = "[%(asctime)s] [%(levelname)s]: %(message)s"
+    logger_date_format = "%m/%d/%Y %I:%M:%S %p"
+    logger_file = logfile_setup()
+    logging.basicConfig(filename = logger_file, format = logger_format, datefmt = logger_date_format, level = logging.DEBUG)
+
     main()
