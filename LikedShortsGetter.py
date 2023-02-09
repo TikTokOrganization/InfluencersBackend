@@ -8,7 +8,9 @@ SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
 
 
 #Ensure config file exists
-def get_config_filepath():
+def get_config_filepath() -> str:
+    """Validate config/auth.json exists. If so, return path to file. If not exit program."""
+
     if not path.isdir("config"):
         logging.error("Config folder does not exist. Please pull the latest stable branch.")
         exit(0)
@@ -20,14 +22,18 @@ def get_config_filepath():
     return config_filepath
 
 
-def load_auth_info(auth_filepath):
+def load_auth_info(auth_filepath: str) -> str:
+    """Get authorization credentials from config/auth.json file."""
+
     with open(auth_filepath) as auth_file:
         auth_info = load(auth_file)
     
     return auth_info
 
 
-def get_liked_videos(auth_info):
+def get_liked_videos(auth_info: str) -> dict:
+    """Make a request to Youtube API to get a user's liked videos."""
+
     token_url = "https://accounts.google.com/o/oauth2/token"
     api_url = "https://youtube.googleapis.com/youtube/v3/videos"
     search_params = {
@@ -37,7 +43,7 @@ def get_liked_videos(auth_info):
     }
 
     #Use refresh token (unchanging) to get a new access token (need new one every time) also using client id and client secret
-    token_response = requests.post(token_url, data = auth_info))
+    token_response = requests.post(token_url, data = auth_info)
     if token_response.status_code != 200:
         logging.error(f"Token request failed, server returned {token_response.status_code}")
         exit(0)
@@ -54,7 +60,9 @@ def get_liked_videos(auth_info):
 
 
 #Set up logger
-def logfile_setup():
+def logfile_setup() -> str:
+    """Generate path to logfile."""
+
     if not path.isdir("logs"):
         mkdir("logs")
     filename = f"log-{len(listdir('logs'))}"
@@ -62,7 +70,7 @@ def logfile_setup():
     return path.join("logs", filename)
 
 
-def main():
+def main() -> None:
     logging.info("Loading authorization credentials...")
     auth_filepath = get_config_filepath()
     auth_info = load_auth_info(auth_filepath)
