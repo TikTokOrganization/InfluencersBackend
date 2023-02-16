@@ -50,7 +50,7 @@ class youtubeShortsGetter:
 
         return category_id
 
-    def getShortsOfCategory(self, int) -> list:
+    def getShortsOfCategory(self, catNum: int) -> list:
         """Returns a list of jsons based on category number input (int) """
         es = Elasticsearch('http://localhost:9200')
         if es.indices.exists(index="myindex"):
