@@ -78,8 +78,8 @@ def get_liked_videos(oauth_token: str, output_filepath: str) -> None:
     print("Sending search query...")
     try:
         search_response = requests.get(query_url, headers = auth_headers, params = search_params)
-        search_response = loads(search_response.text)
         print(f"Search Response Status Code: {search_response.status_code}")
+        search_response = loads(search_response.text)
 
         with open(output_filepath, "w") as output_file:
             dump(search_response, output_file)
