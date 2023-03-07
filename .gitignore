@@ -132,3 +132,4 @@ config/auth.json
 logs/
 oauth_tokens.txt
 finalOutput.json
+client_secret.json
