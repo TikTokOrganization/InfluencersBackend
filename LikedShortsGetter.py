@@ -1,5 +1,5 @@
 import requests, logging
-from json import load, dump
+from json import dump, load, loads
 from os import path, mkdir, listdir
 from sys import exit
 
@@ -31,32 +31,61 @@ def load_auth_info(auth_filepath: str) -> str:
     return auth_info
 
 
-def get_liked_videos(auth_info: str) -> dict:
-    """Make a request to Youtube API to get a user's liked videos."""
+def get_oauth_url(auth_info: dict) -> str:
+    """Generate query url to Google Auth API to authenticate user."""
+
+    auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
+
+    auth_info = dict(auth_info)
+    del auth_info["client_secret"]
+    auth_info["response_type"] = "code"
+    auth_info["scope"] = " ".join(SCOPES)
+    auth_info["access_type"] = "offline"
+    #auth_info["state"] = "RANDOM_STATE" #Replace later
+
+    r = requests.Request("GET", auth_url, params = auth_info).prepare()
+
+    return r.url
+
+
+def get_oauth_token(token_params: dict, auth_code: str) -> str:
+    """Generate query url to Google API to request an OAuth 2.0 token"""
 
     token_url = "https://accounts.google.com/o/oauth2/token"
-    api_url = "https://youtube.googleapis.com/youtube/v3/videos"
+
+    token_params["code"] = auth_code
+    token_params["grant_type"] = "authorization_code"
+
+    token_request = requests.post(token_url, data = token_params)
+    token_request_data = loads(token_request.text)
+
+
+    return token_request_data["access_token"]
+
+
+def get_liked_videos(oauth_token: str, output_filepath: str) -> None:
+    """Make search request to Youtube API for liked videos on a user's profile"""
+
+    query_url = "https://youtube.googleapis.com/youtube/v3/videos"
+
+    auth_headers = {"Authorization": f"Bearer {oauth_token}"}
     search_params = {
         "myRating": "like",
         "key": "AIzaSyBEDqAaPKfAOqKvw8EjTLlI7A4JE1cmR9M",
         "part": "snippet,contentDetails,statistics",
     }
 
-    #Use refresh token (unchanging) to get a new access token (need new one every time) also using client id and client secret
-    token_response = requests.post(token_url, data = auth_info)
-    if token_response.status_code != 200:
-        logging.error(f"Token request failed, server returned {token_response.status_code}")
-        exit(0)
-    token = token_response["access_token"]
+    print("Sending search query...")
+    try:
+        search_response = requests.get(query_url, headers = auth_headers, params = search_params)
+        print(f"Search Response Status Code: {search_response.status_code}")
+        search_response = loads(search_response.text)
 
-    #Make the request to the api using api key and token
-    search_headers = {"Authorization": "Bearer " + token, "Accept": "application/json"}
-    search_response = requests.get(api_url, headers = search_headers, params = search_params)
-    if search_response.status_code != 200:
-        logging.error(f"Search request failed, server returned {search_response.status_code}")
-        exit(0)
-
-    return dict(search_response.json)
+        with open(output_filepath, "w") as output_file:
+            dump(search_response, output_file)
+        print(f"Finished writing {output_filepath}")
+    except Exception as e:
+        print(f"Request exception, error: {e}")
 
 
 #Set up logger
@@ -89,10 +118,10 @@ def main() -> None:
     exit(0)
  
 
-if __name__ == "__main__":
-    logger_format = "[%(asctime)s] [%(levelname)s]: %(message)s"
-    logger_date_format = "%m/%d/%Y %I:%M:%S %p"
-    logger_file = logfile_setup()
-    logging.basicConfig(filename = logger_file, format = logger_format, datefmt = logger_date_format, level = logging.DEBUG)
+# if __name__ == "__main__":
+#     logger_format = "[%(asctime)s] [%(levelname)s]: %(message)s"
+#     logger_date_format = "%m/%d/%Y %I:%M:%S %p"
+#     logger_file = logfile_setup()
+#     logging.basicConfig(filename = logger_file, format = logger_format, datefmt = logger_date_format, level = logging.DEBUG)
 
-    main()
+#     main()
