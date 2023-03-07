@@ -1,6 +1,7 @@
 import LikedShortsGetter
 import requests, json, jsons, os
 from elasticsearch import Elasticsearch 
+
 import time
 
 class youtubeShortsGetter:
@@ -50,35 +51,133 @@ class youtubeShortsGetter:
 
         return category_id
 
-    def getShortsOfCategory(self, catNum: int) -> list:
-        """Returns a list of jsons based on category number input (int) """
+
+    def initializeElasticIndex(self) -> None:
+        #connects to elasticsearch
         es = Elasticsearch('http://localhost:9200')
+
+        #deletes index if it exists and loads json file with all of the liked videos
         if es.indices.exists(index="myindex"):
             es.indices.delete(index='myindex', ignore=[400, 404])
 
         f = open("finalOutput.json", encoding = "utf-8")
         docket_content = f.read()
 
-        es.indices.create(index='myindex')
+        #changes index settings so that singular/plural words can be parsed together
+        analyzer_body = {
+            "settings": {
+                "analysis": {
+                "analyzer": {
+                    "my_analyzer": {
+                    "type": "custom",
+                    "filter": [
+                        "lowercase",
+                        "my_stemmer"
+                    ],
+                    "tokenizer": "whitespace"
+                    }
+                },
+                "filter": {
+                    "my_stemmer": {
+                    "type": "stemmer",
+                    "name": "english"
+                    }
+                }
+            }
+            },
+            "mappings": {
+                "properties": {
+                    "snippet.title": {
+                    "type": "text",
+                    "analyzer": "my_analyzer",
+                        "fields": {
+                            "keyword": {
+                            "type": "keyword"
+                            }
+                        }
+                    },
+                    "snippet.description": {
+                    "type": "text",
+                    "analyzer": "my_analyzer",
+                        "fields": {
+                            "keyword": {
+                            "type": "keyword"
+                            }
+                        }
+                    },
+                    "snippet.channelTitle": {
+                    "type": "text",
+                    "analyzer": "my_analyzer",
+                        "fields": {
+                            "keyword": {
+                            "type": "keyword"
+                            }
+                        }
+                    },
+                    "snippet.tags": {
+                        "type": "text",
+                        "analyzer": "my_analyzer",
+                        "fields": {
+                            "keyword": {
+                            "type": "keyword"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        time.sleep(2)
+        es.indices.create(index='myindex', body = analyzer_body)
 
         # Send the data into es
         Bbody=json.loads(docket_content)
 
+        #loads each youtube short into the index
         for video in Bbody["items"]:
             es.index(index='myindex', ignore=400, body = video)
+    
+        return es
+
+    def getShortsOfCategory(self, catNum: int, es) -> list:
+        """Returns a list of shorts based on category number input (int) """
 
         my_body = {
             "query": {
-                "match" : {
-                    "snippet.categoryId.keyword": str(catNum)
+                "term" : {
+                    "snippet.categoryId.keyword": str(catNum),
                 }
-            }
+            },
+            "size":1000
         }
+
         time.sleep(2)
         r = es.search(index='myindex', body = my_body)
 
         return r["hits"]["hits"]
 
+    def getMoreLikeThis(self, tagName, es)-> list:
+        """Returns all videos that contain tagName (string) - may be useful for user-made categories and search functionality """
+
+        my_body = {
+            "query": {
+                "more_like_this" : {
+                    "fields": ['snippet.title', 'snippet.description', 'snippet.channelTitle', 'snippet.tags'],
+                    "like" : tagName,
+                    "min_term_freq" : 1,
+                    "min_doc_freq" : 1,
+                    "max_doc_freq" : 1000
+
+                }
+            }, 
+            "size":1000
+        } 
+
+        time.sleep(2)
+        r = es.search(index='myindex', body = my_body)
+
+        return r["hits"]["hits"]
+        
 
 
 
