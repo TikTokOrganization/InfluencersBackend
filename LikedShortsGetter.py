@@ -96,7 +96,7 @@ def get_liked_videos(oauth_token: str, output_filepath: str) -> None:
 
             items.extend(search_response["items"])
         
-        print(dumps(items, indent=4))
+        #print(dumps(items, indent=4))
 
         shorts = {"items": []}
         for video in items:

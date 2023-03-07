@@ -7,9 +7,7 @@ class youtubeShortsGetter:
     """Uses YouTube as source for shorts"""
     
     def __init__(self) -> None:
-        auth_filepath = LikedShortsGetter.get_config_filepath()
-        auth_info = LikedShortsGetter.load_auth_info(auth_filepath)
-        user_data = LikedShortsGetter.get_liked_videos(auth_info)
+        pass
 
 
     def getCategories(self) -> dict:
