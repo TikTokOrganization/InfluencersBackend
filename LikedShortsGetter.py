@@ -1,11 +1,12 @@
 import requests, logging
-from json import dump, load, loads
+from json import dump, load, loads, dumps
 from os import path, mkdir, listdir
 from sys import exit
+import google.oauth2.credentials
+import google_auth_oauthlib.flow
 
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
-
 
 #Ensure config file exists
 def get_config_filepath() -> str:
@@ -34,18 +35,19 @@ def load_auth_info(auth_filepath: str) -> str:
 def get_oauth_url(auth_info: dict) -> str:
     """Generate query url to Google Auth API to authenticate user."""
 
-    auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
+    #auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
+#
+    #auth_info = dict(auth_info)
+    #del auth_info["client_secret"]
+    #auth_info["response_type"] = "code"
+    #auth_info["scope"] = " ".join(SCOPES)
+    #auth_info["access_type"] = "offline"
+    ##auth_info["state"] = "RANDOM_STATE" #Replace later
+#
+    #r = requests.Request("GET", auth_url, params = auth_info).prepare()
+    
 
-    auth_info = dict(auth_info)
-    del auth_info["client_secret"]
-    auth_info["response_type"] = "code"
-    auth_info["scope"] = " ".join(SCOPES)
-    auth_info["access_type"] = "offline"
-    #auth_info["state"] = "RANDOM_STATE" #Replace later
-
-    r = requests.Request("GET", auth_url, params = auth_info).prepare()
-
-    return r.url
+    #return r.url
 
 
 def get_oauth_token(token_params: dict, auth_code: str) -> str:
@@ -81,8 +83,36 @@ def get_liked_videos(oauth_token: str, output_filepath: str) -> None:
         print(f"Search Response Status Code: {search_response.status_code}")
         search_response = loads(search_response.text)
 
+        items = []
+        items.extend(search_response["items"])
+
+        while 'nextPageToken' in search_response:
+            nextPageToken = search_response['nextPageToken']
+            search_params['pageToken'] = nextPageToken
+
+            search_response = requests.get(query_url, headers = auth_headers, params = search_params)
+            print(f"Search Response Status Code: {search_response.status_code}")
+            search_response = loads(search_response.text)
+
+            items.extend(search_response["items"])
+        
+        print(dumps(items, indent=4))
+
+        shorts = {"items": []}
+        for video in items:
+            videoID = video["id"]
+            shortsURL = "https://yt.lemnoslife.com/videos"
+            shortsParams = {"part": "short",
+                            "id": videoID}
+            shortTestResponse = requests.get(shortsURL, params = shortsParams)
+            shortTestResponse = loads(shortTestResponse.text)
+
+            if shortTestResponse["items"][0]["short"]["available"] is True:
+                shorts["items"].append(video)
+            
         with open(output_filepath, "w") as output_file:
-            dump(search_response, output_file)
+            dump(shorts, output_file)
+        
         print(f"Finished writing {output_filepath}")
     except Exception as e:
         print(f"Request exception, error: {e}")
