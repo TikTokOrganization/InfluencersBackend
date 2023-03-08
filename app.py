@@ -2,9 +2,10 @@ import flask, json, pickle
 import YTShortsCategorizer, LikedShortsGetter
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
+import os
 
 
-LOGIN_URI = "https://localhost:8080/login"
+LOGIN_URI = "localhost:8080/login"
 
 
 app = flask.Flask(__name__)
@@ -40,7 +41,7 @@ def login():
         'config/client_secret.json', 
         scopes = "https://www.googleapis.com/auth/youtube.readonly")
     
-    flow.redirect_uri = "https://localhost:8080/oauth2callback"
+    flow.redirect_uri = "http://localhost:8080/oauth2callback"
     
     authorization_url, state = flow.authorization_url(
         access_type='offline', include_granted_scopes='true')
@@ -57,7 +58,7 @@ def oauth2callback():
         scopes = "https://www.googleapis.com/auth/youtube.readonly",
         state = state)
     
-    flow.redirect_uri = "https://localhost:8080/oauth2callback"
+    flow.redirect_uri = "http://localhost:8080/oauth2callback"
 
     authorization_response = flask.request.url
     flow.fetch_token(authorization_response = authorization_response)
@@ -70,7 +71,9 @@ def oauth2callback():
           'client_secret': credentials.client_secret,
           'scopes': credentials.scopes}
 
-    return flask.redirect("https://localhost:8080/")
+    print(flask.session)
+
+    return flask.redirect("http://localhost:8080/")
 
 @app.route("/getLikedShorts")
 def get_liked_shorts():
@@ -104,7 +107,7 @@ def get_shorts_of_category():
         category = int(flask.request.args.get("category"))
         shorts = ytShortsGetter.getShortsOfCategory(category)
         return_val = {"shorts": shorts}
-    except Exception as e:
+    except Exception as e: 
         print(f"Error: {e}")
         return_val = flask.Response(status = 500)
     
@@ -113,4 +116,5 @@ def get_shorts_of_category():
 
 if __name__ == "__main__":
     app.secret_key = "SUPER_SECRET" #Change later
-    app.run("localhost", 8080, debug = True, ssl_context='adhoc')  
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    app.run("localhost", 8080, debug = True)  
