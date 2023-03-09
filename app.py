@@ -2,13 +2,17 @@ import flask, json, pickle
 import YTShortsCategorizer, LikedShortsGetter
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
+import youtubeShortsGetter
+from elasticsearch import Elasticsearch
+import os
 
 
-LOGIN_URI = "https://localhost:8080/login"
+LOGIN_URI = "http://localhost:8080/login"
 
 
 app = flask.Flask(__name__)
-ytShortsGetter = YTShortsCategorizer.YoutubeShortsGetter()
+ytShortsGetter = youtubeShortsGetter.youtubeShortsGetter()
+es = ytShortsGetter.initializeElasticIndex()
 
 
 @app.route("/")
@@ -40,7 +44,7 @@ def login():
         'config/client_secret.json', 
         scopes = "https://www.googleapis.com/auth/youtube.readonly")
     
-    flow.redirect_uri = "https://localhost:8080/oauth2callback"
+    flow.redirect_uri = "http://localhost:8080/oauth2callback"
     
     authorization_url, state = flow.authorization_url(
         access_type='offline', include_granted_scopes='true')
@@ -57,7 +61,7 @@ def oauth2callback():
         scopes = "https://www.googleapis.com/auth/youtube.readonly",
         state = state)
     
-    flow.redirect_uri = "https://localhost:8080/oauth2callback"
+    flow.redirect_uri = "http://localhost:8080/oauth2callback"
 
     authorization_response = flask.request.url
     flow.fetch_token(authorization_response = authorization_response)
@@ -70,7 +74,7 @@ def oauth2callback():
           'client_secret': credentials.client_secret,
           'scopes': credentials.scopes}
 
-    return flask.redirect("https://localhost:8080/")
+    return flask.redirect("http://localhost:8080/")
 
 @app.route("/getLikedShorts")
 def get_liked_shorts():
@@ -102,7 +106,7 @@ def get_categories():
 def get_shorts_of_category():
     try:
         category = int(flask.request.args.get("category"))
-        shorts = ytShortsGetter.getShortsOfCategory(category)
+        shorts = ytShortsGetter.getShortsOfCategory(category, es)
         return_val = {"shorts": shorts}
     except Exception as e:
         print(f"Error: {e}")
@@ -110,7 +114,18 @@ def get_shorts_of_category():
     
     return return_val
 
+@app.route("/initializeElastic")
+def initialize_Elastic():
+    flask.session['es'] = ytShortsGetter.initializeElasticIndex()
+    return flask.redirect("http://localhost:8080/")
+
+@app.route("/moreLikeThis")
+def more_like_this():
+    keyword = flask.request.args.get("keyword")
+    return ytShortsGetter.getMoreLikeThis(keyword, es)
+
 
 if __name__ == "__main__":
     app.secret_key = "SUPER_SECRET" #Change later
-    app.run("localhost", 8080, debug = True, ssl_context='adhoc')  
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    app.run("localhost", 8080, debug = True)  
