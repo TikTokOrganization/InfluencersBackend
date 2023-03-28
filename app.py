@@ -102,12 +102,21 @@ def get_liked_shorts():
 def get_categories():
     return ytShortsGetter.getCategories()
 
+@app.route("/addCategory")
+def add_category():
+    catNum = flask.request.args.get("catNum")
+    catName = flask.request.args.get("catName")
+    return ytShortsGetter.addCategory(catNum, catName)
+
+@app.route("/removeCategory")
+def remove_category():
+    catNum = flask.request.args.get("keyword")
+    return ytShortsGetter.removeCategory(catNum)
+
 @app.route("/getShortsOfCategory")
 def get_shorts_of_category():
     try:
-        category = int(flask.request.args.get("category"))
-        shorts = ytShortsGetter.getShortsOfCategory(category, es)
-        return_val = {"shorts": shorts}
+        return_val = ytShortsGetter.getShortsOfCategory(es)
     except Exception as e:
         print(f"Error: {e}")
         return_val = flask.Response(status = 500)
@@ -123,6 +132,11 @@ def initialize_Elastic():
 def more_like_this():
     keyword = flask.request.args.get("keyword")
     return ytShortsGetter.getMoreLikeThis(keyword, es)
+
+@app.route("/getSimilarWords")
+def similar_words():
+    keyword = flask.request.args.get("keyword")
+    return ytShortsGetter.getSimilarWords(keyword, es)
 
 
 if __name__ == "__main__":

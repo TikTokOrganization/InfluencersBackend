@@ -1,19 +1,16 @@
 import LikedShortsGetter
-import requests, json, jsons, os
+import requests, json, os
 from elasticsearch import Elasticsearch 
-
 import time
+
+#for finding similar words
+import gensim
+import nltk
+from nltk.data import find
 
 class youtubeShortsGetter:
     """Uses YouTube as source for shorts"""
-    
-    def __init__(self) -> None:
-        pass
-
-
-    def getCategories(self) -> dict:
-        """Returns a dictionary of the video categories, with an int as a key and string as values"""
-        category_id = {
+    category_id = {
             "1": "Film & Animation",
             "2": "Autos & Vehicles",
             "10": "Music",
@@ -47,10 +44,23 @@ class youtubeShortsGetter:
             "44": "Trailers"
         }
 
-        return category_id
+    def __init__(self) -> None:
+        pass
 
 
-    def initializeElasticIndex(self) -> None:
+    def getCategories(self) -> dict:
+        """Returns a dictionary of the video categories, with an int as a key and string as values"""
+        return youtubeShortsGetter.category_id
+
+    def addCategory(self, catNum, catName) -> None:
+        youtubeShortsGetter.category_id[str(catNum)] = str(catName)
+        return youtubeShortsGetter.category_id 
+        
+    def removeCategory(self, catNum) -> None:
+        remove = youtubeShortsGetter.category_id.pop(str(catNum))
+        return youtubeShortsGetter.category_id
+
+    def initializeElasticIndex() -> None:
         #connects to elasticsearch
         es = Elasticsearch('http://localhost:9200')
 
@@ -70,7 +80,8 @@ class youtubeShortsGetter:
                     "type": "custom",
                     "filter": [
                         "lowercase",
-                        "my_stemmer"
+                        "my_stemmer", 
+                        "stop"
                     ],
                     "tokenizer": "whitespace"
                     }
@@ -137,22 +148,29 @@ class youtubeShortsGetter:
     
         return es
 
-    def getShortsOfCategory(self, catNum: int, es) -> list:
-        """Returns a list of shorts based on category number input (int) """
+    def getShortsOfCategory(self, es):
+        """Returns dictionary where key = category & value = liked videos"""
+        categories = youtubeShortsGetter.category_id
 
-        my_body = {
-            "query": {
-                "term" : {
-                    "snippet.categoryId.keyword": str(catNum),
-                }
-            },
-            "size":1000
-        }
+        likedCategories = {}
 
-        time.sleep(2)
-        r = es.search(index='myindex', body = my_body)
+        for c in categories.keys():
+            my_body = {
+                "query": {
+                    "term" : {
+                        "snippet.categoryId.keyword": c,
+                    }
+                },
+                "size":1000
+            }
 
-        return r["hits"]["hits"]
+            time.sleep(2)
+            r = es.search(index='myindex', body = my_body)
+
+            if(len(r["hits"]["hits"]) != 0):
+                likedCategories[c] = r["hits"]["hits"]
+
+        return likedCategories
 
     def getMoreLikeThis(self, tagName, es)-> list:
         """Returns all videos that contain tagName (string) - may be useful for user-made categories and search functionality """
@@ -177,16 +195,40 @@ class youtubeShortsGetter:
         return r["hits"]["hits"]
         
 
+    def getSimilarWords(self, word, es):
+        """ Returns KNN for a inputted word """
+        
+        #get pretrained model (trained on Google News Dataset)
+        word2vec_sample = str(find('models/word2vec_sample/pruned.word2vec.txt'))
+        model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_sample, binary=False)
 
+        try:
+            #returns top K related words
+            values = model.most_similar(positive=[word], topn = 20)
 
+            ans = []
+            for x in values:
+                ans.append(x[0])
 
+        except KeyError:
+            ans = word
+        
+        my_body = {
+            "query": {
+                "more_like_this" : {
+                    "fields": ['snippet.title', 'snippet.description', 'snippet.channelTitle', 'snippet.tags'],
+                    "like" : ans,
+                    "min_term_freq" : 1,
+                    "min_doc_freq" : 1,
+                    "max_doc_freq" : 1000
 
+                }
+            }, 
+            "size":1000
+        } 
 
+        time.sleep(2)
+        r = es.search(index='myindex', body = my_body)
 
-
-
-
-
-
-
+        return r["hits"]["hits"]
 
