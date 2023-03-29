@@ -62,7 +62,7 @@ class youtubeShortsGetter:
         remove = youtubeShortsGetter.category_id.pop(str(catNum))
         return youtubeShortsGetter.category_id
 
-    def initializeElasticIndex() -> None:
+    def initializeElasticIndex(self) -> None:
         #connects to elasticsearch
         es = Elasticsearch('http://localhost:9200')
 
@@ -150,7 +150,7 @@ class youtubeShortsGetter:
     
         return es
 
-    def getShortsOfCategory(es):
+    def getShortsOfCategory(self, es):
         """Returns dictionary where key = category & value = liked videos"""
         categories = youtubeShortsGetter.category_id
 
@@ -197,7 +197,7 @@ class youtubeShortsGetter:
         return r["hits"]["hits"]
         
 
-    def getSimilarWords(word, es):
+    def getSimilarWords(self, word, es):
         """ Returns KNN for a inputted word """
         
         #get pretrained model (trained on Google News Dataset)
@@ -234,6 +234,3 @@ class youtubeShortsGetter:
 
         return r["hits"]["hits"]
 
-es = youtubeShortsGetter.initializeElasticIndex()
-r = youtubeShortsGetter.getSimilarWords("animal", es)
-print(r)
