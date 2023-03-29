@@ -62,7 +62,7 @@ class youtubeShortsGetter:
         remove = youtubeShortsGetter.category_id.pop(str(catNum))
         return youtubeShortsGetter.category_id
 
-    def initializeElasticIndex() -> None:
+    def initializeElasticIndex(self) -> None:
         #connects to elasticsearch
         es = Elasticsearch('http://localhost:9200')
 
@@ -138,7 +138,7 @@ class youtubeShortsGetter:
             }
         }
 
-        time.sleep(2)
+        time.sleep(1)
         es.indices.create(index='myindex', body = analyzer_body)
 
         # Send the data into es
@@ -150,7 +150,7 @@ class youtubeShortsGetter:
     
         return es
 
-    def getShortsOfCategory(es):
+    def getShortsOfCategory(self, es):
         """Returns dictionary where key = category & value = liked videos"""
         categories = youtubeShortsGetter.category_id
 
@@ -167,7 +167,7 @@ class youtubeShortsGetter:
                 "size":1000
             }
 
-            time.sleep(2)
+            time.sleep(1)
             r = es.search(index='myindex', body = my_body)
 
             if(len(r["hits"]["hits"]) != 0):
@@ -192,7 +192,7 @@ class youtubeShortsGetter:
             "size":1000
         } 
 
-        time.sleep(2)
+        time.sleep(1)
         r = es.search(index='myindex', body = my_body)
 
         return r["hits"]["hits"]
@@ -230,11 +230,8 @@ class youtubeShortsGetter:
             "size":1000
         } 
 
-        time.sleep(2)
+        time.sleep(1)
         r = es.search(index='myindex', body = my_body)
 
         return r["hits"]["hits"]
 
-es = youtubeShortsGetter.initializeElasticIndex()
-r = youtubeShortsGetter.getShortsOfCategory(es)
-print(r.keys())
