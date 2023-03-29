@@ -24,6 +24,15 @@ def login():
     else:
         return Response(status = 404)
 
+@app.route("/logOut")
+def log_out():
+    if "token" in session.keys():
+        del session["token"]
+        del session["last_updated_token"]
+        return Response(status = 200)
+    else:
+        return Response(status = 400)
+
 @app.post("/getData")
 def get_data():
     if not "refresh" in request.form.keys():

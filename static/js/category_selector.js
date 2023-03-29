@@ -84,7 +84,8 @@ let selectCategory = function() {
     }
 
     this.childNodes[0].childNodes[0].style.color = "#bb042b";
-    document.getElementById("Category-" + activeCategory).childNodes[0].childNodes[0].style.color = "#333";
+    if(activeCategory != -1)
+        document.getElementById("Category-" + activeCategory).childNodes[0].childNodes[0].style.color = "#333";
 
     activeCategory = selectedCategory;
 };
@@ -107,6 +108,19 @@ let initializeCategoryList = function() {
     }
 };
 
+
+let logOut = function() {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://localhost:8080/logOut", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onload = function() {
+        if(xhr.response == 200)
+            console.log("Successfull log out.");
+        else
+            console.log("Error logging out.");
+    }
+    xhr.send();
+};
 
 (function($) {
     "use strict"; 
