@@ -53,14 +53,16 @@ class youtubeShortsGetter:
         return youtubeShortsGetter.category_id
 
     def addCategory(self, catNum, catName) -> None:
+        """ Update the category dict when a user creates a new category """
         youtubeShortsGetter.category_id[str(catNum)] = str(catName)
         return youtubeShortsGetter.category_id 
         
     def removeCategory(self, catNum) -> None:
+        """ Remove a category from category dict """
         remove = youtubeShortsGetter.category_id.pop(str(catNum))
         return youtubeShortsGetter.category_id
 
-    def initializeElasticIndex() -> None:
+    def initializeElasticIndex(self) -> None:
         #connects to elasticsearch
         es = Elasticsearch('http://localhost:9200')
 
