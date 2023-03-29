@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="SYS is an open-source application designed to leverage NLP to improve social media engagement as well as gain insight on key metrics relating to usage.">
+    <meta name="author" content="The Influencers">
+
+    <!-- OG Meta Tags to improve the way the post looks when you share the page on LinkedIn, Facebook, Google+ -->
+	<meta property="og:site_name" content="" /> <!-- website name -->
+	<meta property="og:site" content="" /> <!-- website link -->
+	<meta property="og:title" content=""/> <!-- title shown in the actual shared post -->
+	<meta property="og:description" content="" /> <!-- description shown in the actual shared post -->
+	<meta property="og:image" content="" /> <!-- image link, make sure it's jpg -->
+	<meta property="og:url" content="" /> <!-- where do you want your post to link to -->
+	<meta property="og:type" content="article" />
+
+    <!-- Website Title -->
+    <title>404 Error</title>
+    
+    <!-- Styles -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href={{ url_for("static", filename = "css/bootstrap.css") }} rel="stylesheet">
+    <link href={{ url_for("static", filename = "css/fontawesome-all.css") }} rel="stylesheet">
+    <link href={{ url_for("static", filename = "css/swiper.css") }} rel="stylesheet">
+	<link href={{ url_for("static", filename = "css/magnific-popup.css") }} rel="stylesheet">
+	<link href={{ url_for("static", filename = "css/styles.css") }} rel="stylesheet">
+	
+	<!-- Favicon  -->
+    <link rel="icon" href={{ url_for("static", filename = "images/favicon.ico") }}>
+</head>
+<body data-spy="scroll" data-target=".fixed-top">
+    
+    <!-- Preloader -->
+	<div class="spinner-wrapper">
+        <div class="spinner">
+            <div class="bounce1"></div>
+            <div class="bounce2"></div>
+            <div class="bounce3"></div>
+        </div>
+    </div>
+    <!-- end of preloader -->
+    
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
+        <div class="container">
+
+            <!-- Text Logo - Use this if you don't have a graphic logo -->
+            <!-- <a class="navbar-brand logo-text page-scroll" href="index.html">Tivo</a> -->
+
+            <!-- Image Logo -->
+            <a class="navbar-brand logo-image" href={{ url_for("index") }}><img height="184px" width="136px" src={{ url_for("static", filename = "images/brand-logo.png") }} alt="Brand-Logo"></a> 
+            
+            <!-- Mobile Menu Toggle Button -->
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-awesome fas fa-bars"></span>
+                <span class="navbar-toggler-awesome fas fa-times"></span>
+            </button>
+            <!-- end of mobile menu toggle button -->
+
+            <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link page-scroll" href={{ url_for("index") }}>HOME <span class="sr-only">(current)</span></a>
+                    </li>
+                    <!-- <li class="nav-item">
+                        <a class="nav-link page-scroll" href="#features">FEATURES</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link page-scroll" href="#details">DETAILS</a>
+                    </li> -->
+                </ul>
+            </div>
+        </div> <!-- end of container -->
+    </nav> <!-- end of navbar -->
+    <!-- end of navigation -->
+
+
+    <!-- Header -->
+    <header id="header" class="ex-2-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1>Oops! We're not sure how you got here.</h1>
+                </div> <!-- end of col -->
+            </div> <!-- end of row -->
+        </div> <!-- end of container -->
+    </header> <!-- end of ex-header -->
+    <!-- end of header -->
+
+
+    <!-- Scripts -->
+    <script src={{ url_for("static", filename = "js/jquery.min.js") }}></script> <!-- jQuery for Bootstrap's JavaScript plugins -->
+    <script src={{ url_for("static", filename = "js/popper.min.js") }} ></script> <!-- Popper tooltip library for Bootstrap -->
+    <script src={{ url_for("static", filename = "js/bootstrap.min.js") }}></script> <!-- Bootstrap framework -->
+    <script src={{ url_for("static", filename = "js/jquery.easing.min.js") }}></script> <!-- jQuery Easing for smooth scrolling between anchors -->
+    <script src={{ url_for("static", filename = "js/swiper.min.js") }}></script> <!-- Swiper for image and text sliders -->
+    <script src={{ url_for("static", filename = "js/jquery.magnific-popup.js") }} ></script> <!-- Magnific Popup for lightboxes -->
+    <script src={{ url_for("static", filename = "js/validator.min.js") }}></script> <!-- Validator.js - Bootstrap plugin that validates forms -->
+    <script src={{ url_for("static", filename = "js/scripts.js") }}></script> <!-- Custom scripts -->
+</body>
+</html>
