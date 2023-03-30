@@ -64,7 +64,7 @@ class youtubeShortsGetter:
 
     def initializeElasticIndex(self) -> None:
         #connects to elasticsearch
-        es = Elasticsearch('http://localhost:9200')
+        es = Elasticsearch('http://localhost:9201')
 
         #deletes index if it exists and loads json file with all of the liked videos
         if es.indices.exists(index="myindex"):
