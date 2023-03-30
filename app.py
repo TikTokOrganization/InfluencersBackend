@@ -1,4 +1,5 @@
 import flask, json, pickle
+from flask import request
 import YTShortsCategorizer, LikedShortsGetter
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
@@ -75,6 +76,21 @@ def oauth2callback():
           'scopes': credentials.scopes}
 
     return flask.redirect("http://localhost:8080/")
+
+
+@app.route("/recvToken", methods=['POST'])
+def recvToken():
+    try:
+        data = request.data
+        print(data)
+        flask.session['token'] = str(data)
+        print(flask.session['token'])
+        status_code = 200
+    except Exception as e:
+        print(f"Error: {e}")
+        status_code = 500
+    
+    return flask.Response(status = status_code)
 
 @app.route("/getLikedShorts")
 def get_liked_shorts():
